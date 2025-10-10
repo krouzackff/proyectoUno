@@ -3,6 +3,8 @@ package com.example.primerapruebaweb.services;
 import com.example.primerapruebaweb.dto.*;
 import com.example.primerapruebaweb.entity.*;
 import com.example.primerapruebaweb.repository.BookingItemRepository;
+import com.example.primerapruebaweb.repository.BookingRepository;
+import com.example.primerapruebaweb.repository.FlightRepository;
 import com.example.primerapruebaweb.services.mapper.BookingItemMapper;
 import com.example.primerapruebaweb.services.mapper.BookingMapper;
 import com.example.primerapruebaweb.utilities.Cabin;
@@ -32,6 +34,12 @@ class BookingItemServiceImplTest {
 
     @Mock
     private BookingItemMapper bookingItemMapper;
+
+    @Mock
+    private FlightRepository flightRepository;
+
+    @Mock
+    private BookingRepository bookingRepository;
 
     @InjectMocks
     private BookingItemServiceImpl bookingItemService;
@@ -90,51 +98,60 @@ class BookingItemServiceImplTest {
     @Test
     @DisplayName("se creo el item agendado")
     void testCreate() {
-        //cuando se haga un requerimiento peticion o solicitud, te obligo a que hagas algo con el thenreturn
 
-        //ida
-        when(bookingItemMapper.toEntity(validRequest)).thenReturn(savedBookingItem);
-        //vuelta
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(mockBookingEntity));
+        when(flightRepository.findById(1L)).thenReturn(Optional.of(mockFlightEntity));
+
+
+
+
+        when(bookingItemRepository.save(any(BookingItem.class))).thenReturn(savedBookingItem);
+
+
         when(bookingItemMapper.toResponse(savedBookingItem)).thenReturn(expectedResponse);
-        //neutro(guardado)
-        when(bookingItemRepository.save(savedBookingItem)).thenReturn(savedBookingItem);
 
-        // ahora si A LO QUE VENIAMOS.  hacemos una solicitud y retornamos su valor
+
         BookingItemDTO.BookingItemResponse result = bookingItemService.create(validRequest);
 
-        //luego verificamos que sus atributos no hayan sido modificados
+        // Verificaciones
         assertThat(result).isNotNull();
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.cabin()).isEqualTo(Cabin.ECONOMY);
         assertThat(result.price()).isEqualTo(BigDecimal.valueOf(1000));
         assertThat(result.segmentOrder()).isEqualTo(1);
-        assertThat(result.booking()).isEqualTo(expectedResponse.booking()); //hacemos un DTO VS DTO eligiendo el atributo del dto que representa el mock de booking
-        assertThat(result.flight()).isEqualTo(expectedResponse.flight());//lo mismo que arriba
+        assertThat(result.booking()).isEqualTo(expectedResponse.booking());
+        assertThat(result.flight()).isEqualTo(expectedResponse.flight());
 
-        //ESTO ES PARA VERIFICAR CUANTAS VECES LO HACE LOS METODOS SON DE VERIFY Y USAN LOS METODOS DE LOS MAPPERS
-        verify(bookingItemMapper, times(1)).toEntity(validRequest);
+
+        verify(bookingRepository, times(1)).findById(1L);
+        verify(flightRepository, times(1)).findById(1L);
+        verify(bookingItemRepository, times(1)).save(any(BookingItem.class));
         verify(bookingItemMapper, times(1)).toResponse(savedBookingItem);
-        verify(bookingItemRepository, times(1)).save(savedBookingItem);
 
     }
+
 
     @Test
     @DisplayName("Se encontro el item agendado satisfactoriamente")
     void testFindById() {
+        // CORRECCIÓN: Mockear tanto el repository como el mapper
         when(bookingItemRepository.findById(1L)).thenReturn(Optional.of(existingBookingItem));
+        when(bookingItemMapper.toResponse(existingBookingItem)).thenReturn(expectedResponse);
 
-        //when
+        // When
         BookingItemDTO.BookingItemResponse result = bookingItemService.findById(1L);
 
+        // Then
         assertThat(result).isNotNull();
-        assertThat(result.id()).isEqualTo(1);
+        assertThat(result.id()).isEqualTo(1L);
         assertThat(result.cabin()).isEqualTo(Cabin.ECONOMY);
         assertThat(result.price()).isEqualTo(BigDecimal.valueOf(1000));
         assertThat(result.segmentOrder()).isEqualTo(1);
-        assertThat(result.booking()).isEqualTo(expectedResponse.booking()); //hacemos un DTO VS DTO eligiendo el atributo del dto que representa el mock de booking
+        assertThat(result.booking()).isEqualTo(expectedResponse.booking());
         assertThat(result.flight()).isEqualTo(expectedResponse.flight());
 
         verify(bookingItemRepository, times(1)).findById(1L);
+        verify(bookingItemMapper, times(1)).toResponse(existingBookingItem);
     }
 
     @Test

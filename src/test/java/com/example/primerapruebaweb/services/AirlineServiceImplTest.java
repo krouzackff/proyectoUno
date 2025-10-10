@@ -69,17 +69,21 @@ class AirlineServiceImplTest {
     @Test
     @DisplayName("Se encontro la aerolinea satisfactoriamente")
     void testFindById() {
+        // Given
         when(airlineRepository.findById(1L)).thenReturn(Optional.of(existingAirline));
+        when(airlineMapper.toResponse(existingAirline)).thenReturn(expectedResponse);
 
-        //when
+        // When
         AirlineDTO.AirlineResponse result = airlineService.findById(1L);
 
+        // Then
         assertThat(result).isNotNull();
-        assertThat(result.id()).isEqualTo(1);
+        assertThat(result.id()).isEqualTo(1L);
         assertThat(result.name()).isEqualTo("Avianca");
         assertThat(result.code()).isEqualTo("AV");
 
         verify(airlineRepository, times(1)).findById(1L);
+        verify(airlineMapper, times(1)).toResponse(existingAirline);
     }
 
     @Test

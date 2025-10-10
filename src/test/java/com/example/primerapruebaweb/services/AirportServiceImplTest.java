@@ -1,8 +1,6 @@
 package com.example.primerapruebaweb.services;
 
-import com.example.primerapruebaweb.dto.AirlineDTO;
 import com.example.primerapruebaweb.dto.AirportDTO;
-import com.example.primerapruebaweb.entity.Airline;
 import com.example.primerapruebaweb.entity.Airport;
 import com.example.primerapruebaweb.repository.AirportRepository;
 import com.example.primerapruebaweb.services.mapper.AirportMapper;
@@ -12,13 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,7 +36,6 @@ class AirportServiceImplTest {
     private Airport savedAirport;
     private Airport existingAirport;
 
-
     @BeforeEach
     void setUp() {
         validRequest = new AirportDTO.AirportRequest("SBL", "Simon Bolivar", "Santa Marta");
@@ -50,31 +47,29 @@ class AirportServiceImplTest {
     @Test
     @DisplayName("aeropuerto creado con exito")
     void testCreate() {
-        //simulaciones de mockito obligando a funcionar
         when(airportMapper.toEntity(validRequest)).thenReturn(savedAirport);
         when(airportMapper.toResponse(savedAirport)).thenReturn(expectedResponse);
         when(airportRepository.save(savedAirport)).thenReturn(savedAirport);
 
         AirportDTO.AirportResponse result = airportService.create(validRequest);
 
-        //luego verificamos que sus atributos no hayan sido modificados
         assertThat(result).isNotNull();
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.code()).isEqualTo("SBL");
         assertThat(result.name()).isEqualTo("Simon Bolivar");
         assertThat(result.city()).isEqualTo("Santa Marta");
 
-        //ESTO ES PARA VERIFICAR CUANTAS VECES LO HACE LOS METODOS SON DE VERIFY Y USAN LOS METODOS DE LOS MAPPERS
         verify(airportMapper, times(1)).toEntity(validRequest);
         verify(airportMapper, times(1)).toResponse(savedAirport);
         verify(airportRepository, times(1)).save(savedAirport);
-
     }
 
     @Test
     @DisplayName("Se encontro el aeropuerto")
     void testFindById() {
+        // CORRECCIÓN: Mockear tanto el repository como el mapper
         when(airportRepository.findById(1L)).thenReturn(Optional.of(existingAirport));
+        when(airportMapper.toResponse(existingAirport)).thenReturn(expectedResponse);
 
         AirportDTO.AirportResponse result = airportService.findById(1L);
 
@@ -84,29 +79,56 @@ class AirportServiceImplTest {
         assertThat(result.city()).isEqualTo("Santa Marta");
 
         verify(airportRepository, times(1)).findById(1L);
+        verify(airportMapper, times(1)).toResponse(existingAirport);
     }
 
     @Test
     @DisplayName("Se actualizo correctamente")
-    void testUpdate(){
-
+    void testUpdate() {
+        // Given
         AirportDTO.AirportUpdateRequest updateRequest =
                 new AirportDTO.AirportUpdateRequest("SBLUP", "Simon Bolivares", "Santa Marta");
+
+        // CORRECCIÓN: Usar el nombre correcto que realmente se espera
         AirportDTO.AirportResponse updatedResponse =
                 new AirportDTO.AirportResponse(1L, "SBLUP", "Simon Bolivares", "Santa Marta");
 
+        // Aeropuerto después de la actualización
+        Airport updatedAirport = Airport.builder()
+                .id(1L)
+                .code("SBLUP")
+                .name("Simon Bolivares")
+                .city("Santa Marta")
+                .build();
+
         when(airportRepository.findById(1L)).thenReturn(Optional.of(existingAirport));
-        when(airportRepository.save(existingAirport)).thenReturn(existingAirport);
-        when(airportMapper.toResponse(existingAirport)).thenReturn(updatedResponse);
+        when(airportRepository.save(existingAirport)).thenReturn(updatedAirport);
+        when(airportMapper.toResponse(updatedAirport)).thenReturn(updatedResponse);
+
+        // Configurar el comportamiento del updateEntity para que actualice el aeropuerto
+        doAnswer(invocation -> {
+            Airport airport = invocation.getArgument(0);
+            AirportDTO.AirportUpdateRequest request = invocation.getArgument(1);
+            // Simular la actualización de los campos
+            airport.setCode(request.code());
+            airport.setName(request.name());
+            airport.setCity(request.city());
+            return null;
+        }).when(airportMapper).updateEntity(existingAirport, updateRequest);
 
         // When
         AirportDTO.AirportResponse result = airportService.update(1L, updateRequest);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.name()).isEqualTo("Simon Bolivares Updated");
+        // CORRECCIÓN: Usar el nombre correcto que realmente viene del mock
+        assertThat(result.name()).isEqualTo("Simon Bolivares"); // No "Simon Bolivares Updated"
+        assertThat(result.code()).isEqualTo("SBLUP");
+        assertThat(result.city()).isEqualTo("Santa Marta");
+
         verify(airportMapper, times(1)).updateEntity(existingAirport, updateRequest);
         verify(airportRepository, times(1)).save(existingAirport);
+        verify(airportRepository, times(1)).findById(1L);
     }
 
     @Test
@@ -135,6 +157,8 @@ class AirportServiceImplTest {
         assertThat(result.get(0).code()).isEqualTo("SBL");
         assertThat(result.get(1).code()).isEqualTo("DRD");
         verify(airportRepository, times(1)).findAll();
+        verify(airportMapper, times(1)).toResponse(airports.get(0));
+        verify(airportMapper, times(1)).toResponse(airports.get(1));
     }
 
     @Test
@@ -149,5 +173,21 @@ class AirportServiceImplTest {
         // Then
         verify(airportRepository, times(1)).existsById(1L);
         verify(airportRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    @DisplayName("Delete non-existing airport - Should throw exception")
+    void testDeleteNotFound() {
+        // Given
+        when(airportRepository.existsById(1L)).thenReturn(false);
+
+        // When & Then
+        org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> airportService.delete(1L)
+        );
+
+        verify(airportRepository, times(1)).existsById(1L);
+        verify(airportRepository, never()).deleteById(1L);
     }
 }
