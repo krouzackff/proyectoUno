@@ -4,7 +4,6 @@ import com.example.primerapruebaweb.dto.BookingItemDTO;
 import com.example.primerapruebaweb.entity.Booking;
 import com.example.primerapruebaweb.entity.BookingItem;
 import com.example.primerapruebaweb.entity.Flight;
-import com.example.primerapruebaweb.repository.AirportRepository;
 import com.example.primerapruebaweb.repository.BookingRepository;
 import com.example.primerapruebaweb.repository.FlightRepository;
 import org.springframework.transaction.annotation.Transactional;

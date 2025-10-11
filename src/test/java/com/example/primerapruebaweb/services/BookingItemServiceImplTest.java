@@ -6,7 +6,6 @@ import com.example.primerapruebaweb.repository.BookingItemRepository;
 import com.example.primerapruebaweb.repository.BookingRepository;
 import com.example.primerapruebaweb.repository.FlightRepository;
 import com.example.primerapruebaweb.services.mapper.BookingItemMapper;
-import com.example.primerapruebaweb.services.mapper.BookingMapper;
 import com.example.primerapruebaweb.utilities.Cabin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;

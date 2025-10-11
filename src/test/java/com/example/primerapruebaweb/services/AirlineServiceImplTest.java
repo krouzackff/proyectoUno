@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -50,6 +49,7 @@ class AirlineServiceImplTest {
         when(airlineMapper.toEntity(validRequest)).thenReturn(savedAirline);
         when(airlineRepository.save(savedAirline)).thenReturn(savedAirline);
         when(airlineMapper.toResponse(savedAirline)).thenReturn(expectedResponse);
+
 
         //hacemos una solicitud y retornamos su valor
         AirlineDTO.AirlineResponse result = airlineService.create(validRequest);
