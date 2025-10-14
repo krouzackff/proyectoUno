@@ -2,13 +2,12 @@ package com.example.primerapruebaweb.services;
 
 import com.example.primerapruebaweb.dto.AirportDTO;
 import com.example.primerapruebaweb.entity.Airport;
+import com.example.primerapruebaweb.exception.ResourceNotFoundException;
 import com.example.primerapruebaweb.repository.AirportRepository;
 import com.example.primerapruebaweb.services.mapper.AirportMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -32,8 +31,7 @@ public class AirportServiceImpl implements AirportService {
     @Transactional
     public AirportDTO.AirportResponse update(Long id, AirportDTO.AirportUpdateRequest request) {
         Airport airport = airportRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Airport not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Airport", id));
 
         airportMapper.updateEntity(airport, request);
         Airport updatedAirport = airportRepository.save(airport);
@@ -46,7 +44,7 @@ public class AirportServiceImpl implements AirportService {
     public AirportDTO.AirportResponse findById(Long id) {
         return airportRepository.findById(id)
                 .map(airportMapper::toResponse)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Papi no encontramos el aeropuerto con id: " + id + " quiere una caribanola mientras lo arregla?"));
+                .orElseThrow(() -> new ResourceNotFoundException("Airport", id));
     }
 
     @Override
@@ -61,9 +59,8 @@ public class AirportServiceImpl implements AirportService {
     @Override
     @Transactional
     public void delete(Long id) {
-        if (!airportRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Mijo ese aeropuerto no existe!");
-        }
-        airportRepository.deleteById(id);
+        Airport airport = airportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Airport", id));
+        airportRepository.delete(airport);
     }
 }

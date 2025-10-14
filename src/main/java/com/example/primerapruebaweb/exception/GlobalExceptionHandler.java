@@ -69,6 +69,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiError> handleResourceNotFound(ResourceNotFoundException ex) {
+        log.warn("Recurso no encontrado: {}", ex.getMessage());
+
+        ApiError apiError = new ApiError(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                ex
+        );
+
+        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+    }
+
     // Manejo de validación de constraints JPA
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiError> handleConstraintViolation(ConstraintViolationException ex) {

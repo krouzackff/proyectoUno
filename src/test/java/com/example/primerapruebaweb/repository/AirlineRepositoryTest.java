@@ -17,7 +17,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-class AirlineRepositoryTest {
+class
+
+AirlineRepositoryTest {
 
 
 

@@ -30,13 +30,14 @@ public class FlightDTO {
             List<SeatInventoryDTO.SeatInventoryResponse> seatInventories
     ) implements Serializable {}
 
+    // Para actualización - campos opcionales
     public record FlightUpdateRequest(
             String number,
             OffsetDateTime departureTime,
             OffsetDateTime arrivalTime,
-            AirlineDTO.AirlineUpdateRequest airline,
-            AirportDTO.AirportUpdateRequest origin,
-            AirportDTO.AirportUpdateRequest destination,
+            Long airlineId,
+            Long originId,
+            Long destinationId,
             Set<TagDTO.TagUpdateRequest> tags,
             List<SeatInventoryDTO.SeatInventoryUpdateRequest> seatInventories
     ) implements Serializable {}
